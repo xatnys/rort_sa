@@ -6,11 +6,15 @@ gem 'rails', '4.0.0.beta1'
 group :development, :test do
   gem 'sqlite3', '1.3.7'
   gem 'rspec-rails', '2.13.0'
+  gem 'guard-rspec', '2.5.0'
+  gem 'spork-rails', git: 'git://github.com/A-gen/spork-rails.git'
 end
 
 group :test do
   gem 'selenium-webdriver', '2.0'
   gem 'capybara', '2.1.0.beta1'
+  gem 'rb-inotify', '0.9.0'
+  gem 'libnotify', '0.8.0'
 end
 
 group :assets do
