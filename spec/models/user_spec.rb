@@ -66,7 +66,7 @@ describe User do
 
   describe "when using bad emails" do
   	it "should be invalid" do
-  		addresses = %w[user@foo,com user_at_foo.org example.user@foo. foo@bar_baz.com foo@bar+baz.com]
+  		addresses = %w[user@foo,com user_at_foo.org example.user@foo. foo@bar_baz.com foo@bar+baz.com fizz@buh..com]
   		addresses.each do |bad|
   			@user.email = bad
   			expect(@user).not_to be_valid
