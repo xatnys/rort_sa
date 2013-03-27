@@ -93,5 +93,15 @@ describe User do
   	it { should_not be_valid }
   end
 
+  describe "when using mixed case emails" do
+    let (:mixed) { "fOo@BaR.COM" }
+
+    it "should be lowercase upon saving to database" do
+      @user.email = mixed;
+      @user.save
+      expect(@user.reload.email).to eql(mixed.downcase)
+    end
+  end
+
 
 end
