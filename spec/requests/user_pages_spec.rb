@@ -20,13 +20,49 @@ describe "UserPages" do
     	it { should have_title user.name }
     end
 
-    # describe "for non-existing users" do
+    describe "for non-existing users" do
+      before { visit user_path("bad") }
+      it { should have_selector('div.alert.alert-notice', text: "User not found") }
+    end
+  end
 
-    #   before { visit user_path("bad") }
+  describe "user index" do
+    before do
+      sign_in FactoryGirl.create(:user)
+      FactoryGirl.create(:user, name: "Bob", email: "bob@example.com")
+      FactoryGirl.create(:user, name: "Ben", email: "ben@example.com")
+      visit users_path
+    end
 
-    #   it { should have_content "User not found" }
-    #   it { should have_title "User not found" }
-    # end
+    it { should have_title('All users') }
+    it { should have_content('All users') }
+
+    before(:all) { 30.times { FactoryGirl.create(:user) } }
+    after(:all) { User.delete_all }
+
+    it "should list all users" do
+      User.paginate(page: 1, per_page: 10).each do |u|
+        expect(page).to have_selector('li', text: u.name)
+      end
+    end
+
+    describe "deletion links" do
+      describe "as a normal user" do
+        it { should_not have_link('delete') }
+      end
+      describe "as an admin" do
+        let (:admin) { FactoryGirl.create(:admin) }
+        before do
+          sign_in admin
+          visit users_path
+        end
+        it { should have_link('delete', href: user_path(User.first)) }
+        it "should be able to delete another user" do
+          expect { clink_link('delete').to change(User, :count).by(-1) }
+        end
+        it { should_not have_link('delete', href: user_path(admin)) }
+      end
+    end
   end
 
   describe "signup process" do
@@ -53,7 +89,7 @@ describe "UserPages" do
   			fill_in "Name", with: "Example User"
   			fill_in "Email", with: "user@example.com"
   			fill_in "Password", with: "foobar"
-  			fill_in "Confirmation", with: "foobar"
+  			fill_in "Confirm Password", with: "foobar"
   		end
 
   		it "should create a user" do
@@ -70,4 +106,52 @@ describe "UserPages" do
       end
   	end
   end
+
+  describe "edit user" do
+    let (:user) { FactoryGirl.create(:user) }
+    before do 
+      sign_in user
+      visit edit_user_path(user)
+    end
+
+    describe "when editing" do
+      it { should have_content("Edit your profile") }
+      it { should have_title("Edit profile") }
+      it { should have_link('change', href: 'http://gravatar.com/emails') }
+    end
+
+    describe "with invalid information" do
+      before { click_button "Save changes"} 
+
+      it { should have_content('error') }
+    end
+
+    describe "with valid information" do
+      let(:new_name)  { "New Name" }
+      let(:new_email) { "new@example.com" }
+      before do
+        fill_in "Name",             with: new_name
+        fill_in "Email",            with: new_email
+        fill_in "Password",         with: user.password
+        fill_in "Confirm Password", with: user.password
+        click_button "Save changes"
+      end
+
+      it { should have_title(new_name) }
+      it { should have_selector('div.alert.alert-success') }
+      it { should have_link('Sign out', href: signout_path) }
+      specify { expect(user.reload.name).to  eql(new_name) }
+      specify { expect(user.reload.email).to eql(new_email) }
+    end
+
+    describe "forbidden attributes" do
+      let(:params) do
+        { user: { admin: true, password: user.password, 
+                  password_confirmation: user.password } }
+      end
+      before { patch user_path(user), params }
+      specify { expect(user.reload).not_to be_admin }
+    end
+  end
+
 end

@@ -184,3 +184,26 @@ input {
   @extend .control-group;
   @extend .error;
 }
+
+.users {
+  list-style: none;
+  margin: 0;
+  .gravatar {
+    float: none;
+  }
+  li {
+    overflow: auto;
+    padding: 10px 0;
+    border-top: 1px solid $grayLighter;
+    span {
+      vertical-align: top;
+    }
+    &:last-child {
+      border-bottom: 1px solid $grayLighter;
+    }
+  }
+}
+
+.pagination {
+  text-align: center;
+}
