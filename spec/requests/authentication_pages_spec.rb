@@ -65,6 +65,17 @@ describe "Authentication" do
         end
       end
 
+      describe "in the Microposts controller" do
+        describe "submitting a CREATE action" do
+          before { post microposts_path }
+          specify { expect(response).to redirect_to(signin_path) }
+        end
+        describe "submitting a DESTROY action" do
+          before { delete micropost_path(FactoryGirl.create(:micropost)) }
+          specify { expect(response).to redirect_to(signin_path) }
+        end
+      end
+
       describe "accessing a protected page" do
         before do
           visit edit_user_path(user)
@@ -120,6 +131,7 @@ describe "Authentication" do
           specify { expect(response).to redirect_to(root_path) }
         end
       end
+
     end
     describe "for admins" do
       let(:admin) { FactoryGirl.create(:admin) }

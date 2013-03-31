@@ -52,6 +52,7 @@ class UsersController < ApplicationController
 
   def show
     @user = User.find(params[:id])
+    @microposts = @user.microposts.paginate(page: params[:page])
     rescue ActiveRecord::RecordNotFound
       flash[:notice] = "User not found"
       redirect_to root_path
@@ -61,13 +62,6 @@ class UsersController < ApplicationController
   	def user_params
   		params.require(:user).permit(:name,:email,:password,:password_confirmation)
   	end
-
-    def verify_signed_in
-      unless signed_in?
-        store_location
-        redirect_to signin_path, notice: "Please sign in."
-      end
-    end
 
     def verify_correct_user
       @user = User.find(params[:id])

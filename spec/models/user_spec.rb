@@ -13,6 +13,8 @@ describe User do
   it { should respond_to(:remember_token) }
   it { should respond_to(:authenticate) }
   it { should respond_to(:admin) }
+  it { should respond_to(:microposts) }
+  it { should respond_to(:feed) }
   it { should be_valid }
   
   describe "with admin privileges" do
@@ -119,5 +121,30 @@ describe User do
     its(:remember_token) { should_not be_blank }
   end
 
+  describe "micropost associations" do
+    before { @user.save }
+    let!(:older_micropost) { FactoryGirl.create(:micropost, user: @user, created_at: 1.day.ago) }
+    let!(:newer_micropost) { FactoryGirl.create(:micropost, user: @user, created_at: 1.hour.ago) }
 
+    it "should list microposts chronologically in descending order" do
+      expect(@user.microposts.to_a).to eql([newer_micropost,older_micropost])
+    end
+
+    it "destroying user should destroy associated microposts" do
+      microposts = @user.microposts.dup.to_a #duplicate @user.microposts to array
+      @user.destroy
+      expect(microposts).not_to be_empty
+      microposts.each do |micropost|
+        expect(Micropost.where(id: micropost.id)).to be_empty # access the Micropost model's table to check for orphaned microposts 
+      end
+    end
+
+    describe "status" do
+      let(:unfollowed_post) { FactoryGirl.create(:micropost, user: FactoryGirl.create(:user)) }
+      
+      its(:feed) { should include(older_micropost) }
+      its(:feed) { should include(newer_micropost) }
+      its(:feed) { should_not include(unfollowed_post) }
+    end
+  end
 end

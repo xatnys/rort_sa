@@ -36,4 +36,10 @@ module SessionsHelper
     session[:return_to] = request.url
   end
 
+  def verify_signed_in
+    unless signed_in?
+      store_location
+      redirect_to signin_path, notice: "Please sign in."
+    end
+  end
 end

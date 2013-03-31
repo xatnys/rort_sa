@@ -18,6 +18,42 @@ let(:title) { "Ruby on Rails Tutorial Sample App" }
     let(:page_title) { '' }
     it_should_behave_like "static pages"
     it { should_not have_title('Home') }
+
+    describe "for signed-in users" do
+      let(:user) { FactoryGirl.create(:user) }
+      before { sign_in user }
+
+      before do
+        FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
+        visit root_path
+      end
+
+      it "should render the user's feed" do
+        user.feed.each do |item|
+          expect(page).to have_selector("li##{item.id}", text: item.content)
+        end
+      end
+
+      describe "pagination" do
+        before do 
+          50.times {|x| FactoryGirl.create(:micropost, user: user, content: "#{x}") }
+          visit root_path
+        end
+        specify{ expect(page).to have_selector("div.pagination") }
+      end
+      describe "micropost count" do
+        it "should exist" do
+          expect(page).to have_selector("span", text: "micropost")
+        end
+        before do 
+          FactoryGirl.create(:micropost, user: user, content: "blah")
+          visit root_path
+        end
+        it "should be plural for more than 1 micropost" do
+            expect(page).to have_selector("span", text: "microposts")
+        end
+      end
+    end
   end
 
   describe "Help page" do
