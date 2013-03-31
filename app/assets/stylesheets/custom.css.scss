@@ -235,6 +235,17 @@ aside {
     margin-bottom: 5px;
   }
 }
+
 .maxlimit {
   color: $red;
+}
+
+div.feed {
+  &.left {
+    width: 20%;
+  }
+  &.right {
+    display: inline-block;
+    width: 80%;
+  }
 }
