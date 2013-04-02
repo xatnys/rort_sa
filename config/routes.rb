@@ -1,6 +1,11 @@
 SampleApp::Application.routes.draw do
+  resources :relationships, only: [:create, :destroy]
   resources :microposts, only: [:create, :destroy]
-  resources :users
+  resources :users do
+    member do
+      get :following, :followers
+    end
+  end
 
   # sessions
   resources :sessions, only: [:new, :create, :destroy]  

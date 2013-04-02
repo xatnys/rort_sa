@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :verify_signed_in, only: [:edit, :update, :index, :destroy] #specify action to be run before "edit" and "update" methods
+  before_action :verify_signed_in, only: [:edit, :update, :index, :destroy, :followers, :following] #specify action to be run before "edit" and "update" methods
   before_action :verify_correct_user, only: [:edit, :update] 
   before_action :verify_admin, only: :destroy
   before_action :verify_non_user, only: [:new, :create]
@@ -56,6 +56,20 @@ class UsersController < ApplicationController
     rescue ActiveRecord::RecordNotFound
       flash[:notice] = "User not found"
       redirect_to root_path
+  end
+
+  def following
+    @title = "Following"
+    @user = User.find(params[:id])
+    @users = @user.followed_users.paginate(page: params[:page])
+    render 'show_follow_common'
+  end
+
+  def followers
+    @title = "Followers"
+    @user = User.find(params[:id])
+    @users = @user.followers.paginate(page: params[:page]) 
+    render 'show_follow_common'
   end
 
   private

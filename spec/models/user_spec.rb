@@ -15,6 +15,17 @@ describe User do
   it { should respond_to(:admin) }
   it { should respond_to(:microposts) }
   it { should respond_to(:feed) }
+
+  #follow/followers
+  it { should respond_to(:relationships) }
+  it { should respond_to(:followed_users) }
+
+  it { should respond_to(:reverse_relationships) }
+  it { should respond_to(:followers) }
+
+  it { should respond_to(:following?) }
+  it { should respond_to(:follow!) }
+
   it { should be_valid }
   
   describe "with admin privileges" do
@@ -139,12 +150,78 @@ describe User do
       end
     end
 
-    describe "status" do
+    describe "status feed" do
       let(:unfollowed_post) { FactoryGirl.create(:micropost, user: FactoryGirl.create(:user)) }
-      
+      let(:followed_user) { FactoryGirl.create(:user) }
+
+      before do
+        @user.follow!(followed_user)
+        3.times { followed_user.microposts.create!(content:"Lorem ipsum") }
+      end
+
       its(:feed) { should include(older_micropost) }
       its(:feed) { should include(newer_micropost) }
       its(:feed) { should_not include(unfollowed_post) }
+      its(:feed) do
+        followed_user.microposts.each do |micropost|
+          should include(micropost)
+        end
+      end
     end
   end
+
+  describe "following" do
+    let(:other_user) { FactoryGirl.create(:user) }
+    before do
+      @user.save
+      @user.follow!(other_user)
+    end
+
+    it { should be_following(other_user) }
+    its(:followed_users) { should include(other_user) }
+
+    describe "followed_user" do
+      subject { other_user } 
+      its(:followers) { should include(@user) }
+    end
+
+    describe "unfollowing" do
+      before { @user.unfollow!(other_user) }
+
+      it { should_not be_following(other_user) }
+      its(:followed_users) { should_not include(other_user) }
+    end
+  end
+  
+  describe "relationship dependency tests" do
+    let(:user) { FactoryGirl.create(:user) }
+    before { 50.times {FactoryGirl.create(:user)} }
+
+    describe "destroying a followed user" do
+      before do
+        User.all.each do |u|
+          u.follow!(user) unless u == user
+        end
+        @uid = user.id
+        user.destroy
+      end
+      it "should destroy all dependent relationships" do
+        expect(Relationship.find_by(followed_id: @uid)).to be_nil
+      end
+    end
+
+    describe "destroying a following user" do
+      before do
+        User.all.each do |u|
+          user.follow!(u) unless user == u
+        end
+        @uid = user.id
+        user.destroy
+      end
+      it "should destroy all dependent relationships" do
+        expect(Relationship.find_by(follower_id: @uid)).to be_nil
+      end
+    end
+  end
+
 end
